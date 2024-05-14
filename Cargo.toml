@@ -1,0 +1,15 @@
+[package]
+name = "floaters"
+authors = ["El Kasztano"]
+version = "0.1.0"
+edition = "2021"
+description = "generate floating-point numbers in various ways"
+repository = "https://github.com/elkasztano/floaters"
+license = "MIT"
+keywords = ["float", "floating-point", "pseudorandom", "prng"]
+categories = ["algorithms", "mathematics"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+getrandom = { version = "0.2.10", features = ["std"] }
