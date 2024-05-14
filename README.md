@@ -11,10 +11,11 @@ Add the following line to your Cargo.toml:
 floaters = "0.1.0"
 ```
 
-## Example
+## Examples
 
 ```rust
 use floaters::Xorshift128p;
+use floaters::utilities::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     
@@ -22,38 +23,79 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut x128p = Xorshift128p::new_random()?;
 
     // print 5 roughly equidistributed floating-point numbers
-    print!("\n");
+    println!("canonical f64:");
     for _ in 0..5 {
-        println!("canonical f64: {}", x128p.canonical_f64());
+        println!("{}", x128p.canonical_f64());
     }
 
-    // print 5 floating-point numbers that come closer to zero at the cost
+    // print 5 floating-point numbers that may get closer to zero at the cost
     // of not being equidistributed - however, the orders of magnitude should
     // be roughly equidistributed
-    print!("\n");
+    println!("\nnoncanonical f64");
     for _ in 0..5 {
-        println!("noncanonical f64: {}", x128p.noncanonical_f64());
+        println!("{}", x128p.noncanonical_f64());
     }
 
     // print 5 not equidistributed floating-point numbers with specified parameters
     // including negative numbers
-    print!("\n");
+    println!("\nf64 - params: '57,true'");
     for _ in 0..5 {
-        println!("param 57,truef64: {}", x128p.noncanonical_with_params_f64(57, true));
+        println!("{}", x128p.with_params_f64(57, true));
     }
 
     // print 5 f32 tuples instead of single f64's
-    print!("\n");
+    println!("\nf32 tuples");
     for _ in 0..5 {
-        println!("f32 tuple: {:?}", x128p.tuple_f32());
+        println!("{:?}", x128p.tuple_f32());
     }
 
-    // initialize the PRNG with `[u64::MAX; 2]` to create reproducible results
-    // you might want to clock the PRNG several times before you actually use it
-    let mut x128b = Xorshift128p::new();
-    x128b.init(512);
-    let my_float = x128b.noncanonical_with_params_f64(55, true);
-    println!("my float: {}", my_float);
+    // print floating-point numbers with a specified exponent (11 bits)
+    let exponent: u16 = 0b100_0000_0001;
+    println!("\nf64 - given exponent: {:011b}", exponent);
+    // show minimum and maximum (unsigned) with the given exponent
+    println!("bounds (+/-): {:?}", exponent_bounds_f64(exponent));
+    for _ in 0..5 {
+        let my_number = x128p.exp_f64(exponent, true);
+        println!("{}", my_number);
+        println!("bits: {:064b}", my_number.to_bits());
+    }
+
+    // generate f64 numbers from 64 pseudorandom bits - anything may happen
+    // the resulting numbers may include Nan, -0 or +/- infinity
+    println!("\nf64 unrestricted - all bits are pseudorandom");
+    for _ in 0..5 {
+        println!("{:?}", x128p.wild_f64());
+    }
+
+    // create pseudorandom f32 tuples including Nan, -0 and infinity
+    println!("\nf32 tuple - all bits are pseudorandom");
+    for _ in 0..5 {
+        println!("{:?}", x128p.tuple_wild_f32());
+    }
+
+    // generate f32 tuples with specified parameters
+    let left_shift = 25;
+    let sign = false;
+    println!("\nf32 tuples with params '{},{:?}'", left_shift, sign);
+    for _ in 0..5 {
+        println!("{:?}",
+        x128p.tuple_with_params_f32(left_shift, sign));
+    }
+
+    // specify exponent in binary format for f32 tuple
+    let exponentf32: u8 = 0b1000_0001;
+    println!("\nexponent for f32 tuple: {:08b}", exponentf32);
+    for _ in 0..5 {
+        println!("{:?}", x128p.tuple_exp_f32(exponentf32, true));
+    }
+
+    println!("\nbounds of exponent '{:08b}' (f32): {:?}",
+             exponentf32, exponent_bounds_f32(exponentf32));
+
+    let mut x128p2 = Xorshift128p::new_from_str("this should work well as a seed");
+    x128p2.init(1234);
+    let generated_f64 = x128p2.exp_f64(0b100_0000_0001u16, false);
+    println!("\nexample generated with seed: {}", generated_f64);
 
     Ok(())
 }
