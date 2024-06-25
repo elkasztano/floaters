@@ -32,7 +32,7 @@ pub trait NonCanonical {
  
     /// Generate a signed `f64` roughly equidistributed in the range
     /// `-1.0` - `1.0`.
-    /// The tenth least significant bit of the PRNG's output
+    /// The eleventh least significant bit of the PRNG's output
     /// is used as sign bit.
     /// # Example
     /// ```rust
@@ -243,167 +243,64 @@ pub trait SeedStr {
     fn seed_from_str(input: &str) -> Self;
 }
 
-impl SeedStr for rand_xoshiro::Xoshiro512StarStar {
-
-    fn seed_from_str(input: &str) -> Self {
-        let seed512 = u8_64_from_str(input);
-        let seed = rand_xoshiro::Seed512(seed512);
-        Self::from_seed(seed)
+// create u8 array out of str - core function
+macro_rules! bytes_str {
+    ($fn:ident, $n:expr) => {
+        fn $fn(input: &str) -> [u8; $n] {
+            let mut seed = [u8::MAX; $n];
+            for (i, byte) in input.as_bytes().iter().enumerate() {
+                seed[i % $n] ^= *byte;
+            }
+            seed
+        }
     }
-
 }
 
-impl SeedStr for rand_xoshiro::Xoshiro512PlusPlus {
+// create functions for different array sizes
+bytes_str!(u8_8_from_str, 8);
+bytes_str!(u8_16_from_str, 16);
+bytes_str!(u8_32_from_str, 32);
+bytes_str!(u8_64_from_str, 64);
 
-    fn seed_from_str(input: &str) -> Self {
-        let seed512 = u8_64_from_str(input);
-        let seed = rand_xoshiro::Seed512(seed512);
-        Self::from_seed(seed)
+// PRNGs with a large seed must be handled differently
+macro_rules! impl_large_seed_str {
+    ($t:ty) => {
+        impl SeedStr for $t {
+            fn seed_from_str(input: &str) -> Self {
+                let seed512 = u8_64_from_str(input);
+                let seed = rand_xoshiro::Seed512(seed512);
+                Self::from_seed(seed)
+            }
+        }
     }
-
 }
 
-impl SeedStr for rand_xoshiro::Xoshiro512Plus {
+impl_large_seed_str!(rand_xoshiro::Xoshiro512StarStar);
+impl_large_seed_str!(rand_xoshiro::Xoshiro512PlusPlus);
+impl_large_seed_str!(rand_xoshiro::Xoshiro512Plus);
 
-    fn seed_from_str(input: &str) -> Self {
-        let seed512 = u8_64_from_str(input);
-        let seed = rand_xoshiro::Seed512(seed512);
-        Self::from_seed(seed)
+// implement SeedStr for various PRNGs
+macro_rules! impl_seed_str {
+    ($t:ty, $f:ident) => {
+        impl SeedStr for $t {
+            fn seed_from_str(input: &str) -> Self {
+                Self::from_seed($f(input))
+            }
+        }
     }
-
 }
 
-impl SeedStr for rand_xoshiro::Xoshiro256StarStar {
-
-    fn seed_from_str(input: &str) -> Self {
-        Self::from_seed(u8_32_from_str(input))
-    }
-
-}
-
-impl SeedStr for rand_xoshiro::Xoshiro256PlusPlus {
-
-    fn seed_from_str(input: &str) -> Self {
-        Self::from_seed(u8_32_from_str(input))
-    }
-
-}
-
-impl SeedStr for rand_xoshiro::Xoshiro256Plus {
-
-    fn seed_from_str(input: &str) -> Self {
-        Self::from_seed(u8_32_from_str(input))
-    }
-
-}
-
-impl SeedStr for rand_xoshiro::Xoshiro128StarStar {
-
-    fn seed_from_str(input: &str) -> Self {
-        Self::from_seed(u8_16_from_str(input))
-    }
-
-}
-
-impl SeedStr for rand_xoshiro::Xoshiro128PlusPlus {
-
-    fn seed_from_str(input: &str) -> Self {
-        Self::from_seed(u8_16_from_str(input))
-    }
-
-}
-
-impl SeedStr for rand_xoshiro::Xoshiro128Plus {
-
-    fn seed_from_str(input: &str) -> Self {
-        Self::from_seed(u8_16_from_str(input))
-    }
-
-}
-
-impl SeedStr for rand_xoshiro::Xoroshiro128StarStar {
-
-    fn seed_from_str(input: &str) -> Self {
-        Self::from_seed(u8_16_from_str(input))
-    }
-
-}
-
-impl SeedStr for rand_xoshiro::Xoroshiro128PlusPlus {
-
-    fn seed_from_str(input: &str) -> Self {
-        Self::from_seed(u8_16_from_str(input))
-    }
-
-}
-
-impl SeedStr for rand_xoshiro::Xoroshiro128Plus {
-
-    fn seed_from_str(input: &str) -> Self {
-        Self::from_seed(u8_16_from_str(input))
-    }
-
-}
-
-impl SeedStr for rand_xoshiro::Xoroshiro64StarStar {
-    
-    fn seed_from_str(input: &str) -> Self {
-        Self::from_seed(u8_8_from_str(input))
-    }
-
-}
-
-impl SeedStr for rand_xoshiro::Xoroshiro64Star {
-
-    fn seed_from_str(input: &str) -> Self {
-        Self::from_seed(u8_8_from_str(input))
-    }
-
-}
-
-fn u8_64_from_str(input: &str) -> [u8; 64] {
-
-    let mut seed = [u8::MAX; 64];
-
-    for (i, byte) in input.as_bytes().iter().enumerate() {
-        seed[i % 64] ^= *byte;
-    }
-
-    seed
-}
-
-fn u8_32_from_str(input: &str) -> [u8; 32] {
-    
-    let mut seed = [u8::MAX; 32];
-    
-    for (i, byte) in input.as_bytes().iter().enumerate() {
-        seed[i % 32] ^= *byte;
-    }
-
-    seed
-}
-
-fn u8_16_from_str(input: &str) -> [u8; 16] {
-
-    let mut seed = [u8::MAX; 16];
-
-    for (i, byte) in input.as_bytes().iter().enumerate() {
-        seed[i % 16] ^= *byte;
-    }
-
-    seed
-}
-
-fn u8_8_from_str(input: &str) -> [u8; 8] {
-
-    let mut seed = [u8::MAX; 8];
-
-    for (i, byte) in input.as_bytes().iter().enumerate() {
-        seed[i % 8] ^= *byte;
-    }
-
-    seed
-}
+impl_seed_str!(rand_xoshiro::Xoshiro256StarStar, u8_32_from_str);
+impl_seed_str!(rand_xoshiro::Xoshiro256PlusPlus, u8_32_from_str);
+impl_seed_str!(rand_xoshiro::Xoshiro256Plus, u8_32_from_str);
+impl_seed_str!(rand_xoshiro::Xoshiro128StarStar, u8_16_from_str);
+impl_seed_str!(rand_xoshiro::Xoshiro128PlusPlus, u8_16_from_str);
+impl_seed_str!(rand_xoshiro::Xoshiro128Plus, u8_16_from_str);
+impl_seed_str!(rand_xoshiro::Xoroshiro128StarStar, u8_16_from_str);
+impl_seed_str!(rand_xoshiro::Xoroshiro128PlusPlus, u8_16_from_str);
+impl_seed_str!(rand_xoshiro::Xoroshiro128Plus, u8_16_from_str);
+impl_seed_str!(rand_xoshiro::Xoroshiro64StarStar, u8_8_from_str);
+impl_seed_str!(rand_xoshiro::Xoroshiro64Star, u8_8_from_str);
 
 fn u32_from_u64(bits: u64) -> (u32, u32) {
     ( (bits << 32 >> 32) as u32,
