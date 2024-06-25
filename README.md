@@ -14,17 +14,6 @@ For convenience, `rand_xoshiro` is re-exported.
 
 In addition, the `SeedStr` trait allows you to create a seed for PRNGs from the xoshiro family by iterating over bytes from a string slice.
 
-Version `0.3.0` comes with an almost complete redesign. Earlier versions contained re-implementations of Xorshift128+ and Xoroshiro256++.
-
-## Usage
-
-Add the following to your Cargo.toml:
-
-```toml
-[dependencies]
-floaters = "0.3.0"
-```
-
 ## Examples
 
 ```rust
