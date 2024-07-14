@@ -1,4 +1,4 @@
-use rand::{Rng, SeedableRng};
+use rand::Rng;
 
 /// Parameter for functions that return either signed or unsigned values.
 #[derive(PartialEq, Copy, Clone)]
@@ -7,7 +7,7 @@ pub enum Sign {
     Unsigned
 }
 
-/// The core element of the crate. Contains methods that generate
+/// A trait containing methods that generate
 /// floating point numbers out of pseudorandom `u64` integers.
 pub trait NonCanonical {
     /// Generates an `f64`. The maximum is 0.9999999999999999.
@@ -17,18 +17,14 @@ pub trait NonCanonical {
     /// equidistributed.   
     /// # Example
     /// ```rust
-    /// use floaters::rand_core::SeedableRng;
+    /// use floaters::rand_core::{RngCore, SeedableRng};
     /// use floaters::{Xoshiro256PlusPlus, NonCanonical};
     ///
     /// let mut rng = Xoshiro256PlusPlus::seed_from_u64(78787878);
-    /// rng.idle(125);
+    /// (0..125).for_each(|_| { rng.next_u64(); } );
     /// assert_eq!(0.0008912212147751437, rng.noncanonical_f64());
     /// ```
     fn noncanonical_f64(&mut self) -> f64;
-
-    /// Advance the pseudorandom number generator `n` steps and ignore
-    /// the result.
-    fn idle(&mut self, n: usize);
  
     /// Generate a signed `f64` roughly equidistributed in the range
     /// `-1.0` - `1.0`.
@@ -36,11 +32,11 @@ pub trait NonCanonical {
     /// is used as sign bit.
     /// # Example
     /// ```rust
-    /// use floaters::rand_core::SeedableRng;
+    /// use floaters::rand_core::{RngCore, SeedableRng};
     /// use floaters::{Xoshiro256PlusPlus, NonCanonical};
     ///
     /// let mut rng = Xoshiro256PlusPlus::seed_from_u64(1234);
-    /// rng.idle(10);
+    /// (0..10).for_each(|_| { rng.next_u64(); } );
     /// assert_eq!(-0.8926449323284786, rng.signed_uniform());
     /// ```
     fn signed_uniform(&mut self) -> f64;
@@ -52,11 +48,11 @@ pub trait NonCanonical {
     /// the specifications of the `f64` type.
     /// # Example
     /// ```rust
-    /// use floaters::rand_core::SeedableRng;
+    /// use floaters::rand_core::{RngCore, SeedableRng};
     /// use floaters::{Xoshiro256StarStar, NonCanonical, Sign};
     ///
     /// let mut rng = Xoshiro256StarStar::seed_from_u64(7878);
-    /// rng.idle(42);
+    /// (0..42).for_each(|_| { rng.next_u64(); } );
     /// let exp = 0b100_0000_0001;
     /// let sign = Sign::Signed;
     /// assert_eq!(-4.569802780283289, rng.exp_f64(exp, sign));
@@ -78,11 +74,11 @@ pub trait NonCanonical {
     /// 
     /// # Example
     /// ```rust
-    /// use floaters::rand_core::SeedableRng;
+    /// use floaters::rand_core::{RngCore, SeedableRng};
     /// use floaters::{Xoshiro256StarStar, NonCanonical, Sign};
     ///
     /// let mut rng = Xoshiro256StarStar::seed_from_u64(42);
-    /// rng.idle(7878);
+    /// (0..7878).for_each(|_| { rng.next_u64(); } );
     /// assert_eq!(-0.05579455843802982, rng.with_params_f64(55, Sign::Signed));
     /// ```
     fn with_params_f64(&mut self, left_shift: i8, signed: Sign) -> f64;
@@ -98,17 +94,17 @@ pub trait NonCanonical {
     ///
     /// # Example
     /// ```rust
-    /// use floaters::rand_core::SeedableRng;
+    /// use floaters::rand_core::{RngCore, SeedableRng};
     /// use floaters::{Xoshiro256StarStar, NonCanonical};
     ///
     /// let mut rng = Xoshiro256StarStar::seed_from_u64(43214321);
-    /// rng.idle(987);
+    /// (0..987).for_each(|_| { rng.next_u64(); } );
     /// assert_eq!( (0.009435893, 0.24692793),
     ///     rng.noncanonical_tuple_f32() );
     /// ```
     fn noncanonical_tuple_f32(&mut self) -> (f32, f32);
 
-    /// Generates an signed `f32` tuple.
+    /// Generates a signed `f32` tuple.
     fn signed_tuple_f32(&mut self) -> (f32, f32);
     
     /// Generates an `f32` tuple with specified parameters.
@@ -118,16 +114,32 @@ pub trait NonCanonical {
     ///
     /// # Example
     /// ```rust
-    /// use floaters::rand_core::SeedableRng;
+    /// use floaters::rand_core::{RngCore, SeedableRng};
     /// use floaters::{Xoshiro256PlusPlus, NonCanonical, Sign};
     /// 
     /// let mut rng = Xoshiro256PlusPlus::seed_from_u64(42);
-    /// rng.idle(1234);
-    /// let tuple_f32 = rng.tuple_f32_with_params(26, Sign::Signed);
+    /// (0..1234).for_each(|_| { rng.next_u64(); } );
+    /// let tuple_f32 = rng.with_params_tuple_f32(26, Sign::Signed);
     ///
     /// assert_eq!( (-0.0095176855, 0.24847426), tuple_f32 );
     /// ```
-    fn tuple_f32_with_params(&mut self, left_shift: i8, signed: Sign) -> (f32, f32);
+    fn with_params_tuple_f32(&mut self, left_shift: i8, signed: Sign) -> (f32, f32);
+
+    /// Generates an `f32` tuple with a specified exponent.
+    /// Creates signed values if `signed` is the `Signed` variant.
+    ///
+    /// # Example
+    /// ```rust
+    /// use floaters::rand_core::{RngCore, SeedableRng};
+    /// use floaters::{Xoshiro256PlusPlus, NonCanonical, Sign};
+    ///
+    /// let mut rng = Xoshiro256PlusPlus::seed_from_u64(42);
+    /// (0..1234).for_each(|_| { rng.next_u64(); } );
+    /// let tuple_f32 = rng.exp_f32(0b1000_0001u8, Sign::Signed);
+    ///
+    /// assert_eq!((-4.873055f32, 7.951176f32), tuple_f32);
+    /// ```
+    fn exp_f32(&mut self, exp: u8, signed: Sign) -> (f32, f32);
    
     /// Generates an `f64` out of 64 pseudorandom bits including
     /// `-0`, infinity and Nan.
@@ -140,12 +152,6 @@ pub trait NonCanonical {
 
 impl<T: Rng> NonCanonical for T {
    
-    fn idle(&mut self, n: usize) {
-        for _ in 0..n {
-            let _ = self.next_u64();
-        }
-    }
-
     fn noncanonical_f64(&mut self) -> f64 {
         let mut x = self.next_u64();
         x |= u64::MAX << (56 + 2) >> 2;
@@ -194,7 +200,14 @@ impl<T: Rng> NonCanonical for T {
         ( f32_with_sign(le), f32_with_sign(be) )
     }
 
-    fn tuple_f32_with_params(&mut self, left_shift: i8, signed: Sign) -> (f32, f32) {
+    fn exp_f32(&mut self, exp: u8, signed: Sign) -> (f32, f32) {
+        let x = self.next_u64();
+        let (mut le, mut be) = u32_from_u64(x);
+        ( specified_exp_f32(&mut le, exp, signed),
+        specified_exp_f32(&mut be, exp, signed) )
+    }
+
+    fn with_params_tuple_f32(&mut self, left_shift: i8, signed: Sign) -> (f32, f32) {
         let left_shift_sat = if left_shift < 21 { 21 }
             else if left_shift > 29 { 29 }
             else { left_shift };
@@ -218,89 +231,7 @@ impl<T: Rng> NonCanonical for T {
 
 }
 
-/// Create a seed for the PRNG using a `&str`.
-pub trait SeedStr {
-
-    /// Generate seed for the PRNG with a `&str`.
-    /// The seed is initially filled entirely with binary
-    /// `1`s and modified by iteratively applying `XOR`
-    /// operations with bytes from the `&str`.
-    ///
-    /// # Example
-    /// ```rust
-    /// use floaters::rand_core::{SeedableRng, RngCore};
-    /// use floaters::{Xoshiro512StarStar, SeedStr, NonCanonical};
-    ///
-    /// let mut large_rng = Xoshiro512StarStar::seed_from_str(
-    /// "Lorem ipsum dolor sit amet, consectetur adipisici elit, \
-    /// sed eiusmod tempor incidunt ut labore et dolore magna \
-    /// aliqua.");
-    ///
-    /// large_rng.idle(42);
-    ///
-    /// assert_eq!(0x3d2687892b2357c1, large_rng.next_u64());
-    /// ```
-    fn seed_from_str(input: &str) -> Self;
-}
-
-// create u8 array out of str - core function
-macro_rules! bytes_str {
-    ($fn:ident, $n:expr) => {
-        fn $fn(input: &str) -> [u8; $n] {
-            let mut seed = [u8::MAX; $n];
-            for (i, byte) in input.as_bytes().iter().enumerate() {
-                seed[i % $n] ^= *byte;
-            }
-            seed
-        }
-    }
-}
-
-// create functions for different array sizes
-bytes_str!(u8_8_from_str, 8);
-bytes_str!(u8_16_from_str, 16);
-bytes_str!(u8_32_from_str, 32);
-bytes_str!(u8_64_from_str, 64);
-
-// PRNGs with a large seed must be handled differently
-macro_rules! impl_large_seed_str {
-    ($t:ty) => {
-        impl SeedStr for $t {
-            fn seed_from_str(input: &str) -> Self {
-                let seed512 = u8_64_from_str(input);
-                let seed = rand_xoshiro::Seed512(seed512);
-                Self::from_seed(seed)
-            }
-        }
-    }
-}
-
-impl_large_seed_str!(rand_xoshiro::Xoshiro512StarStar);
-impl_large_seed_str!(rand_xoshiro::Xoshiro512PlusPlus);
-impl_large_seed_str!(rand_xoshiro::Xoshiro512Plus);
-
-// implement SeedStr for various PRNGs
-macro_rules! impl_seed_str {
-    ($t:ty, $f:ident) => {
-        impl SeedStr for $t {
-            fn seed_from_str(input: &str) -> Self {
-                Self::from_seed($f(input))
-            }
-        }
-    }
-}
-
-impl_seed_str!(rand_xoshiro::Xoshiro256StarStar, u8_32_from_str);
-impl_seed_str!(rand_xoshiro::Xoshiro256PlusPlus, u8_32_from_str);
-impl_seed_str!(rand_xoshiro::Xoshiro256Plus, u8_32_from_str);
-impl_seed_str!(rand_xoshiro::Xoshiro128StarStar, u8_16_from_str);
-impl_seed_str!(rand_xoshiro::Xoshiro128PlusPlus, u8_16_from_str);
-impl_seed_str!(rand_xoshiro::Xoshiro128Plus, u8_16_from_str);
-impl_seed_str!(rand_xoshiro::Xoroshiro128StarStar, u8_16_from_str);
-impl_seed_str!(rand_xoshiro::Xoroshiro128PlusPlus, u8_16_from_str);
-impl_seed_str!(rand_xoshiro::Xoroshiro128Plus, u8_16_from_str);
-impl_seed_str!(rand_xoshiro::Xoroshiro64StarStar, u8_8_from_str);
-impl_seed_str!(rand_xoshiro::Xoroshiro64Star, u8_8_from_str);
+// f32 helper functions
 
 fn u32_from_u64(bits: u64) -> (u32, u32) {
     ( (bits << 32 >> 32) as u32,
@@ -319,4 +250,13 @@ fn f32_with_sign(bits: u32) -> f32 {
     let sign_bit = bits >> 8 << 31;
     let output = (bits >> 9) as f32 * 1.192093e-07;
     f32::from_bits(output.to_bits() | sign_bit)
+}
+
+fn specified_exp_f32(bits: &mut u32, exponent: u8, signed: Sign) -> f32 {
+    if signed == Sign::Signed
+        { *bits &= !(255u32 << 23); } 
+    else
+        { *bits &= !(511u32 << 23); }
+    *bits |= (exponent as u32) << 23;
+    f32::from_bits(*bits)
 }
