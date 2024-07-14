@@ -17,7 +17,7 @@ this kind of functionality, you may use the `rand_seeder` crate instead.
 
 ## Examples
 
-![plot](https://github.com/elkasztano/floaters/blob/main/prng_walk.png)
+![plot](https://github.com/elkasztano/floaters/blob/main/prng_walk.png?raw=true)
 
 The above plot was created with the following code:
 
