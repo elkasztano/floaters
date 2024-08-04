@@ -1,14 +1,8 @@
 use rand::Rng;
 
-/// Parameter for functions that return either signed or unsigned values.
-#[derive(PartialEq, Copy, Clone)]
-pub enum Sign {
-    Signed,
-    Unsigned
-}
-
 /// A trait containing methods that generate
-/// floating point numbers out of pseudorandom `u64` integers.
+/// floating point numbers out of pseudorandom `u64` integers in
+/// several experimental ways.
 pub trait NonCanonical {
     /// Generates an `f64`. The maximum is 0.9999999999999999.
     /// The minimum is 0.000030517578125, and therefore much closer
@@ -16,9 +10,10 @@ pub trait NonCanonical {
     /// getting equidistributed values. The orders of magnitude are roughly
     /// equidistributed.   
     /// # Example
-    /// ```rust
-    /// use floaters::rand_core::{RngCore, SeedableRng};
-    /// use floaters::{Xoshiro256PlusPlus, NonCanonical};
+    /// ```
+    /// use rand_core::{RngCore, SeedableRng};
+    /// use rand_xoshiro::Xoshiro256PlusPlus;
+    /// use floaters::NonCanonical;
     ///
     /// let mut rng = Xoshiro256PlusPlus::seed_from_u64(78787878);
     /// (0..125).for_each(|_| { rng.next_u64(); } );
@@ -31,9 +26,10 @@ pub trait NonCanonical {
     /// The eleventh least significant bit of the PRNG's output
     /// is used as sign bit.
     /// # Example
-    /// ```rust
-    /// use floaters::rand_core::{RngCore, SeedableRng};
-    /// use floaters::{Xoshiro256PlusPlus, NonCanonical};
+    /// ```
+    /// use rand_core::{RngCore, SeedableRng};
+    /// use rand_xoshiro::Xoshiro256PlusPlus;
+    /// use floaters::NonCanonical;
     ///
     /// let mut rng = Xoshiro256PlusPlus::seed_from_u64(1234);
     /// (0..10).for_each(|_| { rng.next_u64(); } );
@@ -47,9 +43,10 @@ pub trait NonCanonical {
     /// Only the lowest 11 bits of the specified `u16` will be used as the exponent, due to
     /// the specifications of the `f64` type.
     /// # Example
-    /// ```rust
-    /// use floaters::rand_core::{RngCore, SeedableRng};
-    /// use floaters::{Xoshiro256StarStar, NonCanonical, Sign};
+    /// ```
+    /// use rand_core::{RngCore, SeedableRng};
+    /// use rand_xoshiro::Xoshiro256StarStar;
+    /// use floaters::{NonCanonical, Sign};
     ///
     /// let mut rng = Xoshiro256StarStar::seed_from_u64(7878);
     /// (0..42).for_each(|_| { rng.next_u64(); } );
@@ -73,9 +70,10 @@ pub trait NonCanonical {
     /// The numbers are not evenly distributed.
     /// 
     /// # Example
-    /// ```rust
-    /// use floaters::rand_core::{RngCore, SeedableRng};
-    /// use floaters::{Xoshiro256StarStar, NonCanonical, Sign};
+    /// ```
+    /// use rand_core::{RngCore, SeedableRng};
+    /// use rand_xoshiro::Xoshiro256StarStar;
+    /// use floaters::{NonCanonical, Sign};
     ///
     /// let mut rng = Xoshiro256StarStar::seed_from_u64(42);
     /// (0..7878).for_each(|_| { rng.next_u64(); } );
@@ -90,12 +88,13 @@ pub trait NonCanonical {
     /// lowest 32 bits, and the second element is generated using the
     /// highest 32 bits of the underlying `u64`.
     /// Keep in mind that the lowest bits might be of low linear complexity,
-    /// depending on the chosen PRNG.
+    /// depending on the chosen (P)RNG.
     ///
     /// # Example
-    /// ```rust
-    /// use floaters::rand_core::{RngCore, SeedableRng};
-    /// use floaters::{Xoshiro256StarStar, NonCanonical};
+    /// ```
+    /// use rand_core::{RngCore, SeedableRng};
+    /// use rand_xoshiro::Xoshiro256StarStar;
+    /// use floaters::NonCanonical;
     ///
     /// let mut rng = Xoshiro256StarStar::seed_from_u64(43214321);
     /// (0..987).for_each(|_| { rng.next_u64(); } );
@@ -104,18 +103,23 @@ pub trait NonCanonical {
     /// ```
     fn noncanonical_tuple_f32(&mut self) -> (f32, f32);
 
-    /// Generates a signed `f32` tuple.
+    /// Generates a signed `f32` tuple. The `.0` element of
+    /// the tuple might be of low linear complexity, depending
+    /// on the chosen (P)RNG.
     fn signed_tuple_f32(&mut self) -> (f32, f32);
     
     /// Generates an `f32` tuple with specified parameters.
-    /// Values are not evenly distributed.
+    /// Values are likely not evenly distributed.
     /// The `left_shift` parameter saturates at 21 and 29.
-    /// Creates signed values if `signed` is the `Signed` variant.
+    /// Creates signed values if `Sign` is the `Signed` variant.
+    /// The `.0` element of the tuple might be of low linear
+    /// complexity, depending on the chosen (P)RNG.
     ///
     /// # Example
-    /// ```rust
-    /// use floaters::rand_core::{RngCore, SeedableRng};
-    /// use floaters::{Xoshiro256PlusPlus, NonCanonical, Sign};
+    /// ```
+    /// use rand_core::{RngCore, SeedableRng};
+    /// use rand_xoshiro::Xoshiro256PlusPlus;
+    /// use floaters::{NonCanonical, Sign};
     /// 
     /// let mut rng = Xoshiro256PlusPlus::seed_from_u64(42);
     /// (0..1234).for_each(|_| { rng.next_u64(); } );
@@ -126,12 +130,15 @@ pub trait NonCanonical {
     fn with_params_tuple_f32(&mut self, left_shift: i8, signed: Sign) -> (f32, f32);
 
     /// Generates an `f32` tuple with a specified exponent.
-    /// Creates signed values if `signed` is the `Signed` variant.
+    /// Creates signed values if `Sign` is the `Signed` variant.
+    /// The `.0` element of the tuple might be of low linear
+    /// complexity, depending on the chosen (P)RNG.
     ///
     /// # Example
-    /// ```rust
-    /// use floaters::rand_core::{RngCore, SeedableRng};
-    /// use floaters::{Xoshiro256PlusPlus, NonCanonical, Sign};
+    /// ```
+    /// use rand_core::{RngCore, SeedableRng};
+    /// use rand_xoshiro::Xoshiro256PlusPlus;
+    /// use floaters::{NonCanonical, Sign};
     ///
     /// let mut rng = Xoshiro256PlusPlus::seed_from_u64(42);
     /// (0..1234).for_each(|_| { rng.next_u64(); } );
@@ -142,11 +149,40 @@ pub trait NonCanonical {
     fn exp_f32(&mut self, exp: u8, signed: Sign) -> (f32, f32);
    
     /// Generates an `f64` out of 64 pseudorandom bits including
-    /// `-0`, infinity and Nan.
+    /// negative zero, infinity, negative infinity and Nan.
+    ///
+    /// # Example
+    /// ```
+    /// use rand_core::{RngCore, SeedableRng};
+    /// use rand_xoshiro::Xoshiro512StarStar;
+    /// use floaters::NonCanonical;
+    ///
+    /// let mut rng = Xoshiro512StarStar::seed_from_u64(1234);
+    /// (0..123).for_each(|_| { rng.next_u64(); } );
+    /// let wild_f64 = rng.wild_f64();
+    ///
+    /// assert_eq!(2.640929385653772e-105, wild_f64);
+    /// ```
     fn wild_f64(&mut self) -> f64;
 
     /// Generates an `f32` tuple out of 64 pseudorandom bits including
-    /// `-0`, infinity and Nan.
+    /// negative zero, infinity, negative infinity and Nan.
+    /// Keep in mind that the lower bits of the underlying `u64`
+    /// might be of low linear complexity, so you might prefer the
+    /// second element of the tuple.
+    ///
+    /// # Example
+    /// ```
+    /// use rand_core::{RngCore, SeedableRng};
+    /// use rand_xoshiro::Xoshiro512StarStar;
+    /// use floaters::NonCanonical;
+    ///
+    /// let mut rng = Xoshiro512StarStar::seed_from_u64(123);
+    /// (0..123).for_each(|_| { rng.next_u64(); } );
+    /// let wild_f32 = rng.wild_tuple_f32();
+    ///
+    /// assert_eq!((-6.6361835e20, -1.9641858), wild_f32);
+    /// ```
     fn wild_tuple_f32(&mut self) -> (f32, f32);
 }
 
@@ -229,6 +265,13 @@ impl<T: Rng> NonCanonical for T {
         f32::from_bits(be) )
     }
 
+}
+
+/// Return either signed or unsigned values.
+#[derive(PartialEq, Copy, Clone)]
+pub enum Sign {
+    Signed,
+    Unsigned
 }
 
 // f32 helper functions

@@ -1,17 +1,20 @@
 [package]
 name = "floaters"
 authors = ["El Kasztano"]
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 description = "generate floating-point numbers in various ways"
 repository = "https://github.com/elkasztano/floaters"
 exclude = ["*.png"]
 license = "MIT"
-keywords = ["float", "floating-point", "pseudorandom", "prng"]
+keywords = ["float", "floating-point", "random", "pseudorandom"]
 categories = ["algorithms", "mathematics"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 rand = "0.8.5"
+
+[dev-dependencies]
+rand_core = "0.6.4"
 rand_xoshiro = "0.6.0"

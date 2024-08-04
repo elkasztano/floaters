@@ -10,23 +10,22 @@ of numbers, while equidistribution is not a priority.
 The sign bit may be pseudorandom as well, depending on the method.
 
 The crate adds a trait for any type that implements `Rng` from `rand_core`.
-For convenience, `rand_xoshiro` is re-exported.
 
-In version `0.4.0` the `SeedStr` trait was removed entirely. If you need
-this kind of functionality, you may use the `rand_seeder` crate instead.
+In version `0.5.0` the re-export of `rand_xoshiro` was removed and a few more helper functions were added.
 
 ## Examples
 
 ![plot](https://github.com/elkasztano/floaters/blob/main/prng_walk.png?raw=true)
 
-The above plot was created with the following code:
+The above chart was created with the following code:
 
 
 ```rust
-use floaters::{Xoshiro256PlusPlus, NonCanonical, Sign};
-use floaters::rand_core::RngCore;
-use rand_seeder::Seeder;
-use plotters::prelude::*;
+use floaters::{NonCanonical, Sign};
+use rand_xoshiro::rand_core::RngCore; // version = "0.6.0"
+use rand_xoshiro::Xoshiro256PlusPlus;
+use rand_seeder::Seeder; // version = "0.3.0"
+use plotters::prelude::*; // version = "0.3.6"
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
@@ -74,8 +73,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 A more basic example:
 
 ```rust
-use floaters::rand_core::{RngCore, SeedableRng};
-use floaters::{Xoshiro256StarStar, NonCanonical};
+use rand_xoshiro::rand_core::{RngCore, SeedableRng};
+use rand_xoshiro::Xoshiro256StarStar; // version = "0.6.0"
+use floaters::NonCanonical;
 
 fn main() {
 
